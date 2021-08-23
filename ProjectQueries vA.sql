@@ -3,6 +3,13 @@ use project;
 /*
 1. What were our total sales per quarter last year?
 */
+
+select quarter(order_date),sum(quantity*unit_price)
+	from orders
+	inner join order_details
+    on orders.id = order_details.order_id
+    group by quarter(order_date);	
+
 /*
 2. Which are our highest revenue-generating products?
 */
