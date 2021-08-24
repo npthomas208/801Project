@@ -59,7 +59,7 @@ select product_id, product_name,sum(quantity) as 'rev'
     on orders.id = order_details.order_id
     inner join products
     on products.id = order_details.product_id
-    group by product_name
+    group by product_id
     order by rev desc;
 	
 /*
@@ -67,14 +67,27 @@ select product_id, product_name,sum(quantity) as 'rev'
 $4,000? How many are “shrimps,” having spent less than $20?
 */
 
-select concat(first_name,' ',last_name) as 'name', sum(quantity*unit_price) as 'rev' 
+select * from
+	(select concat(first_name,' ',last_name) as 'name_', sum(quantity*unit_price) as 'rev' 
 	from customers
 	inner join orders
 	on orders.customer_id = customers.id
     inner join order_details
     on orders.id = order_details.order_id
-    group by name
-    order by rev desc;
+    group by name_
+    order by rev desc) as tmp
+    where rev > 4000;
+
+select * from
+	(select concat(first_name,' ',last_name) as 'name_', sum(quantity*unit_price) as 'rev' 
+	from customers
+	inner join orders
+	on orders.customer_id = customers.id
+    inner join order_details
+    on orders.id = order_details.order_id
+    group by name_
+    order by rev desc) as tmp
+    where rev < 20;
 
 
 /*
