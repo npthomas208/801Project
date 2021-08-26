@@ -129,19 +129,62 @@ select suppliers.company,
 Are there multiple suppliers for products?
 */
 
+select products.id,company
+	from suppliers
+    inner join purchase_orders
+    on suppliers.id = purchase_orders.supplier_id
+    inner join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id
+	inner join inventory_transactions
+    on inventory_transactions.id = purchase_order_details.inventory_id
+	inner join products
+    on products.id = inventory_transactions.product_id
+    group by products.id,company;
+    
+/*
+There appears to be a one to one relationship between product and supplier.
+*/
+
 /*
 8. What’s the best-selling product, based on the number of times the product has 
 been ordered?
 */
 
-
+select suppliers.company,
+	products.product_name,
+    count(purchase_orders.id) as 'po_quantity'
+	from suppliers
+    inner join purchase_orders
+    on suppliers.id = purchase_orders.supplier_id
+    inner join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id
+	inner join inventory_transactions
+    on inventory_transactions.id = purchase_order_details.inventory_id
+	inner join products
+    on products.id = inventory_transactions.product_id
+    inner join inventory_transaction_types
+    on inventory_transaction_types.id = inventory_transactions.transaction_type
+    group by suppliers.company, products.product_name
+    order by po_quantity desc;
 
 /*
 9. Who are our best performing employees in terms of the number of units sold?
 */
 
+select * from purchase_orders;
 
-
+select employees.id,first_name,last_name,
+	sum(purchase_order_details.quantity) as 'units_sold'
+	from employees
+    inner join purchase_orders
+    on employees.id = purchase_orders.submitted_by
+	inner join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id
+    group by employees.id
+    order by units_sold desc;
+    
+    
 /*
 10. Who are our best performing employees in terms of the dollar amount sold?
 */
+
