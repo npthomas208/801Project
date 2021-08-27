@@ -10,8 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(RMySQL)
 library(ggplot2)
 library(dplyr)
-require(maps)
-require(viridis)
+library(maps)
+library(viridis)
+library(plotly)
 theme_set(
   theme_void()
   )
@@ -54,8 +55,36 @@ df<- merge(states_map, po_loc, by = c("region"), all=TRUE)
 
 df <- left_join(states_map,df,by = c("region"))
 
-ggplot(df, aes(long.x, lat.x, group = group.x))+
+map <- ggplot(df, aes(long.x, lat.x, group = region))+
   geom_polygon(aes(fill = po_counts), color = "white")+
   scale_fill_viridis_c(option = "C")
-```
 
+ggplotly(map)
+```
+```{r}
+cost_rev_table <- list()
+cost_rev_table$by_product <- dbGetQuery(conn, "select *,margin/total_cost 
+          as 'perc_margin' from (
+          select product_id, product_name,round(sum(order_details.quantity*order_details.unit_price)) as 'total_rev',
+          round(sum(order_details.quantity*products.standard_cost)) as 'total_cost',
+          round(sum((order_details.quantity*order_details.unit_price-order_details.quantity*products.standard_cost)/order_details.quantity*order_details.unit_price)) as 'margin'
+          from orders
+          inner join order_details
+          on orders.id = order_details.order_id
+          inner join products
+          on products.id = order_details.product_id
+          group by product_id) as tmp 
+          order by perc_margin desc;")
+
+
+rev <- ggplot(cost_rev_table$by_product, aes(x=product_name,y=total_rev))+
+  geom_bar(position="stack", stat="identity")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+perc_margin <- ggplot(cost_rev_table$by_product, aes(x=reorder(product_name,-perc_margin),y=perc_margin))+
+  geom_bar(position="stack", stat="identity")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplotly(rev)
+ggplotly(perc_margin)
+```

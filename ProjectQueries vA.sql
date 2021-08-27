@@ -218,7 +218,31 @@ select orders.ship_state_province,
 
 /*
 How many purchase orders are generated based on customer orders vs restocking from suppliers?
+*/
+
+/*
 What category of products has the highest standard cost?
+*/
+
+/*
+****What category of product has the highest margin?*****
+*/
+
+select *,margin/total_cost 
+	as 'perc_margin' from (
+	select product_id, product_name,round(sum(order_details.quantity*order_details.unit_price)) as 'total_rev',
+	round(sum(order_details.quantity*products.standard_cost)) as 'total_cost',
+    round(sum((order_details.quantity*order_details.unit_price-order_details.quantity*products.standard_cost)/order_details.quantity*order_details.unit_price)) as 'margin'
+	from orders
+	inner join order_details
+    on orders.id = order_details.order_id
+    inner join products
+    on products.id = order_details.product_id
+    group by product_id) as tmp 
+    order by perc_margin desc;
+    
+
+/*
 What is the variance between standard cost and actual cost?
 What is the worst selling product based on the number of units sold?
 Who are the worst performing employees based on units sold per region?
