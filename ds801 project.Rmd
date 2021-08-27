@@ -1,0 +1,61 @@
+---
+title: "Untitled"
+author: "Nate Thomas"
+date: "8/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(RMySQL)
+library(ggplot2)
+library(dplyr)
+require(maps)
+require(viridis)
+theme_set(
+  theme_void()
+  )
+```
+
+```{r}
+getSqlConnection <- function(){
+  con <-
+    dbConnect(
+      RMySQL::MySQL(),
+      username = 'default',
+      password = 'sqDlsPOubh89zrgy',
+      host = 'localhost',
+      db = 'project',
+      port = 3307
+    ) # TODO: use a configuration group `group = "my-db")`
+  return(con)
+}
+conn <- getSqlConnection()
+res <- dbListTables(conn)
+res
+```
+
+```{r}
+po_loc <- dbGetQuery(conn, "select orders.ship_state_province,
+                	count(orders.id) as 'po_counts'
+                	from orders 
+                  inner join customers
+                  on orders.customer_id = customers.id
+                  group by orders.ship_state_province
+                  order by po_counts desc;")
+po_loc
+```
+
+
+```{r}
+states_map <- map_data("state")
+po_loc$region <- tolower(state.name[match(po_loc$ship_state_province,state.abb)])
+df<- merge(states_map, po_loc, by = c("region"), all=TRUE)
+
+df <- left_join(states_map,df,by = c("region"))
+
+ggplot(df, aes(long.x, lat.x, group = group.x))+
+  geom_polygon(aes(fill = po_counts), color = "white")+
+  scale_fill_viridis_c(option = "C")
+```
+

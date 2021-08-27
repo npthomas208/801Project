@@ -197,3 +197,33 @@ select employees.id,first_name,last_name,
     on orders.id = order_details.order_id
     group by employees.id
     order by $_amount_sold desc;
+
+/*
+GROUP DEVELOPED QUESTIONS...
+*/ 
+
+/*
+Which state/province consists of the largest number of purchase orders within 2019?
+orders from cusomers, using the shipped to address:
+*/
+
+select orders.ship_state_province,
+	company,
+	count(orders.id) as 'po_counts'
+	from orders 
+    inner join customers
+    on orders.customer_id = customers.id
+    group by company,orders.ship_state_province
+    order by po_counts desc;
+
+/*
+How many purchase orders are generated based on customer orders vs restocking from suppliers?
+What category of products has the highest standard cost?
+What is the variance between standard cost and actual cost?
+What is the worst selling product based on the number of units sold?
+Who are the worst performing employees based on units sold per region?
+What’s our turnaround time for shipping?
+What proportion of transactions are waste? What products are wasted most?
+How does unit cost in the PO detail table differentiate from the standard cost?
+**What potential surplus/deficit may occur due to transaction waste or failed allocation of resources could result in profit/loss?
+*/
