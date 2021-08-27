@@ -188,3 +188,12 @@ select employees.id,first_name,last_name,
 10. Who are our best performing employees in terms of the dollar amount sold?
 */
 
+select employees.id,first_name,last_name,
+  sum(order_details.quantity*order_details.unit_price) as '$_amount_sold'
+  from employees
+    inner join orders
+    on employees.id = orders.employee_id
+  inner join order_details
+    on orders.id = order_details.order_id
+    group by employees.id
+    order by $_amount_sold desc;
