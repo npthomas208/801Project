@@ -27,7 +27,7 @@ getSqlConnection <- function(){
       password = 'sqDlsPOubh89zrgy',
       host = 'localhost',
       db = 'project',
-      port = 3307
+      port = 3306
     ) # TODO: use a configuration group `group = "my-db")`
   return(con)
 }
@@ -55,7 +55,7 @@ df<- merge(states_map, po_loc, by = c("region"), all=TRUE)
 
 df <- left_join(states_map,df,by = c("region"))
 
-map <- ggplot(df, aes(long.x, lat.x, group = region))+
+map <- ggplot(df, aes(long.x, lat.x, group = group.x))+
   geom_polygon(aes(fill = po_counts), color = "white")+
   scale_fill_viridis_c(option = "C")
 
