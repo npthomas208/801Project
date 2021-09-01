@@ -88,3 +88,7 @@ perc_margin <- ggplot(cost_rev_table$by_product, aes(x=reorder(product_name,-per
 ggplotly(rev)
 ggplotly(perc_margin)
 ```
+
+```{r}
+save.image()
+```
