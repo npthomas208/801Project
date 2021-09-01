@@ -55,7 +55,7 @@ df<- merge(states_map, po_loc, by = c("region"), all=TRUE)
 
 df <- left_join(states_map,df,by = c("region"))
 
-map <- ggplot(df, aes(long.x, lat.x, group = group.x))+
+map <- ggplot(df, aes(long.x, lat.x, group = group.x, labels=region))+
   geom_polygon(aes(fill = po_counts), color = "white")+
   scale_fill_viridis_c(option = "C")
 
