@@ -224,8 +224,19 @@ How many purchase orders are generated based on customer orders vs restocking fr
 What category of products has the highest standard cost?
 */
 
+select category, avg(standard_cost) as avg_standard_cost
+	from products 
+	group by category
+    order by avg_standard_cost desc;
+
+/**** of these which has the highest sc*/
+
+select *
+	from products 
+	where standard_cost = (select MAX(standard_cost) as maximum from products);
+
 /*
-****What category of product has the highest margin?*****
+****What product has the highest margin?*****
 */
 
 select *,margin/total_cost 
@@ -241,12 +252,89 @@ select *,margin/total_cost
     group by product_id) as tmp 
     order by perc_margin desc;
     
+/*
+What is the average difference and standard deviation of the difference between standard cost and actual cost?
+*/
+
+/****This first query is investigatory****/
+
+select unit_cost, standard_cost, (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id;
+
+/****This one answers the question****/
+
+select avg(diff) as average_difference, stddev_samp(diff) as stddev_difference, 
+	(select sum(quantity)
+	from purchase_order_details) as total_quantity
+    from
+	(select (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id) as tmp1;
+
+/**** This one defines the total vendor "over change" which is negative, 
+which means the company is typically getting discounts *****/
+
+select total_quantity*average_difference as total_vendor_overcharge from
+	(select avg(diff) as average_difference, stddev_samp(diff) as stddev_difference, 
+	(select sum(quantity)
+	from purchase_order_details) as total_quantity
+    from
+	(select (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id) as tm1) as tmp2;
 
 /*
-What is the variance between standard cost and actual cost?
 What is the worst selling product based on the number of units sold?
+*/
+
+select product_id, product_name, sum(quantity) as total_quantity
+	from order_details
+    inner join products
+    on products.id = order_details.product_id
+    group by product_id
+    order by total_quantity
+    limit 1;
+
+/*
 Who are the worst performing employees based on units sold per region?
+*/
+
+/**** This shows all ****/
+
+select concat(employees.first_name,' ', employees.last_name) as emp,
+	orders.ship_country_region, sum(order_details.quantity) as sale_volume, 
+    sum(order_details.quantity*unit_price) as total_sales
+    from orders
+    inner join employees
+    on orders.employee_id = employees.id
+    inner join order_details
+    on order_details.order_id = orders.id
+    group by emp, orders.ship_country_region
+    with rollup;
+
+/**** This answers the question****/
+
+select concat(employees.first_name,' ', employees.last_name) as emp,
+	orders.ship_country_region, sum(order_details.quantity) as sale_volume, 
+    sum(order_details.quantity*unit_price) as total_sales
+    from orders
+    inner join employees
+    on orders.employee_id = employees.id
+    inner join order_details
+    on order_details.order_id = orders.id
+    group by emp, orders.ship_country_region
+    order by sale_volume
+    limit 1;
+
+/*
 What’s our turnaround time for shipping?
+*/
+
+/*
 What proportion of transactions are waste? What products are wasted most?
 How does unit cost in the PO detail table differentiate from the standard cost?
 **What potential surplus/deficit may occur due to transaction waste or failed allocation of resources could result in profit/loss?

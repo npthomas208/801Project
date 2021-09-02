@@ -89,6 +89,16 @@ ggplotly(rev)
 ggplotly(perc_margin)
 ```
 
+
+```{r}
+sc <- dbGetQuery(conn, 'select unit_cost, standard_cost, (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id;')
+
+
+sc
+```
 ```{r}
 save.image()
 ```
