@@ -203,7 +203,7 @@ GROUP DEVELOPED QUESTIONS...
 */ 
 
 /*
-Which state/province consists of the largest number of purchase orders within 2019?
+1. Which state/province consists of the largest number of purchase orders within 2019? 
 orders from cusomers, using the shipped to address:
 */
 
@@ -217,11 +217,11 @@ select orders.ship_state_province,
     order by po_counts desc;
 
 /*
-How many purchase orders are generated based on customer orders vs restocking from suppliers?
+2. How many purchase orders are generated based on customer orders vs restocking from suppliers?
 */
 
 /*
-What category of products has the highest standard cost?
+3. What category of products has the highest standard cost?
 */
 
 select category, avg(standard_cost) as avg_standard_cost
@@ -234,26 +234,9 @@ select category, avg(standard_cost) as avg_standard_cost
 select *
 	from products 
 	where standard_cost = (select MAX(standard_cost) as maximum from products);
-
-/*
-****What product has the highest margin?*****
-*/
-
-select *,margin/total_cost 
-	as 'perc_margin' from (
-	select product_id, product_name,round(sum(order_details.quantity*order_details.unit_price)) as 'total_rev',
-	round(sum(order_details.quantity*products.standard_cost)) as 'total_cost',
-    round(sum((order_details.quantity*order_details.unit_price-order_details.quantity*products.standard_cost)/order_details.quantity*order_details.unit_price)) as 'margin'
-	from orders
-	inner join order_details
-    on orders.id = order_details.order_id
-    inner join products
-    on products.id = order_details.product_id
-    group by product_id) as tmp 
-    order by perc_margin desc;
     
 /*
-What is the average difference and standard deviation of the difference between standard cost and actual cost?
+4. What is the average difference and standard deviation of the difference between standard cost and actual cost?
 */
 
 /****This first query is investigatory****/
@@ -288,7 +271,7 @@ select total_quantity*average_difference as total_vendor_overcharge from
     on products.id = purchase_order_details.product_id) as tm1) as tmp2;
 
 /*
-What is the worst selling product based on the number of units sold?
+5. What is the worst selling product based on the number of units sold?
 */
 
 select product_id, product_name, sum(quantity) as total_quantity
@@ -300,7 +283,7 @@ select product_id, product_name, sum(quantity) as total_quantity
     limit 1;
 
 /*
-Who are the worst performing employees based on units sold per region?
+6. Who are the worst performing employees based on units sold per region?
 */
 
 /**** This shows all ****/
@@ -331,11 +314,88 @@ select concat(employees.first_name,' ', employees.last_name) as emp,
     limit 1;
 
 /*
-What’s our turnaround time for shipping?
+7. What’s our turnaround time for shipping?
+*/
+
+/**** unfortunately all payment dates and expected dates are null ****/
+select payment_date
+	from purchase_orders;
+
+select payment_date, date_received 
+	from purchase_orders
+	right join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id;
+
+/**** using approved_date as alternative ****/
+
+select approved_date, date_received, datediff(date_received,approved_date) as shipping_days,
+	product_name, suppliers.company
+	from purchase_orders
+	right join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id
+    inner join products
+    on products.id = purchase_order_details.product_id
+    inner join suppliers
+    on purchase_orders.supplier_id = suppliers.id
+    where (approved_date is not null) and (date_received is not null)
+    order by shipping_days desc;
+
+
+/*
+8. How does unit cost in the PO detail table differ from standard cost
+
+Duplicate - ignore.
 */
 
 /*
-What proportion of transactions are waste? What products are wasted most?
-How does unit cost in the PO detail table differentiate from the standard cost?
-**What potential surplus/deficit may occur due to transaction waste or failed allocation of resources could result in profit/loss?
+9. What potential surplus/deficit may occur due to transaction waste or failed allocation of resources could result in profit/loss?
 */
+
+/*
+10. How many pruchase orders are on hold and what proportions?
+*/
+
+select * from inventory_transactions
+	inner join inventory_transaction_types
+    on transaction_type = inventory_transaction_types.id;
+
+select type_name, (purchase_order_id is not null),
+	(customer_order_id is not null)
+	from inventory_transactions
+	inner join inventory_transaction_types
+    on inventory_transactions.transaction_type = inventory_transaction_types.id;
+    
+/*
+11. How many customer orders are on hold and what proportions?
+*/
+
+/*
+12. What product has the highest margin?
+*/
+
+select *,margin/total_cost 
+	as 'perc_margin' from (
+	select product_id, product_name,round(sum(order_details.quantity*order_details.unit_price)) as 'total_rev',
+	round(sum(order_details.quantity*products.standard_cost)) as 'total_cost',
+    round(sum((order_details.quantity*order_details.unit_price-order_details.quantity*products.standard_cost)/order_details.quantity*order_details.unit_price)) as 'margin'
+	from orders
+	inner join order_details
+    on orders.id = order_details.order_id
+    inner join products
+    on products.id = order_details.product_id
+    group by product_id) as tmp 
+    order by perc_margin desc;
+
+/*
+13. What is typical invoice payment lag time, and how do customers compare on average?
+*/
+
+select company,avg(datediff(paid_date,invoice_date)) as avg_days_receipt_of_payment
+	from orders, invoices, customers
+    where orders.id = invoices.order_id and
+    customers.id = orders.customer_id
+    group by company
+    order by avg_days_receipt_of_payment;
+
+
+
