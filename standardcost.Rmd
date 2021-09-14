@@ -1,0 +1,20 @@
+---
+title: "standardcost"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(plotly)
+load('.RData')
+```
+
+## Query
+select unit_cost, standard_cost, (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id;
+          
+## Map
+
+```{r}
+```

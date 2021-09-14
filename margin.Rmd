@@ -1,0 +1,33 @@
+---
+title: "margin"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+library(plotly)
+load('.RData')
+```
+
+## Query
+
+select *,margin/total_cost 
+          as 'perc_margin' from (
+          select product_id, product_name,round(sum(order_details.quantity*order_details.unit_price)) as 'total_rev',
+          round(sum(order_details.quantity*products.standard_cost)) as 'total_cost',
+          round(sum((order_details.quantity*order_details.unit_price-order_details.quantity*products.standard_cost)/order_details.quantity*order_details.unit_price)) as 'margin'
+          from orders
+          inner join order_details
+          on orders.id = order_details.order_id
+          inner join products
+          on products.id = order_details.product_id
+          group by product_id) as tmp 
+          order by perc_margin desc;
+
+          
+## Map
+
+```{r}
+ggplotly(rev)
+ggplotly(perc_margin)
+```

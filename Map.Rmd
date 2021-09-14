@@ -1,0 +1,25 @@
+---
+title: "Map"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(plotly)
+load('.RData')
+```
+
+## Query
+
+select orders.ship_state_province,
+                	count(orders.id) as 'po_counts'
+                	from orders 
+                  inner join customers
+                  on orders.customer_id = customers.id
+                  group by orders.ship_state_province
+                  order by po_counts desc;
+          
+## Map
+
+```{r}
+ggplotly(map)
+```

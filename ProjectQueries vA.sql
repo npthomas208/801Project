@@ -203,7 +203,12 @@ GROUP DEVELOPED QUESTIONS...
 */ 
 
 /*
+<<<<<<< HEAD
 Which state/province consists of the largest number of customer orders within 2019?
+=======
+1. Which state/province consists of the largest number of purchase orders within 2019? 
+orders from cusomers, using the shipped to address:
+>>>>>>> e2029a42d245944d0d5fcc9384f8fd88a46432f3
 */
 
 select orders.ship_state_province,
@@ -216,14 +221,142 @@ select orders.ship_state_province,
     order by po_counts desc;
 
 /*
-How many purchase orders are generated based on customer orders vs restocking from suppliers?
+2. How many purchase orders are generated based on customer orders vs restocking from suppliers?
 */
 
 /*
-What category of products has the highest standard cost?
+3. What category of products has the highest standard cost?
+*/
+
+select category, avg(standard_cost) as avg_standard_cost
+	from products 
+	group by category
+    order by avg_standard_cost desc;
+
+/**** of these which has the highest sc*/
+
+select *
+	from products 
+	where standard_cost = (select MAX(standard_cost) as maximum from products);
+    
+/*
+4. What is the average difference and standard deviation of the difference between standard cost and actual cost?
+*/
+
+/****This first query is investigatory****/
+
+select unit_cost, standard_cost, (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id;
+
+/****This one answers the question****/
+
+select avg(diff) as average_difference, stddev_samp(diff) as stddev_difference, 
+	(select sum(quantity)
+	from purchase_order_details) as total_quantity
+    from
+	(select (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id) as tmp1;
+
+/**** This one defines the total vendor "over change" which is negative, 
+which means the company is typically getting discounts *****/
+
+select total_quantity*average_difference as total_vendor_overcharge from
+	(select avg(diff) as average_difference, stddev_samp(diff) as stddev_difference, 
+	(select sum(quantity)
+	from purchase_order_details) as total_quantity
+    from
+	(select (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id) as tm1) as tmp2;
+
+/*
+5. What is the worst selling product based on the number of units sold?
+*/
+
+select product_id, product_name, sum(quantity) as total_quantity
+	from order_details
+    inner join products
+    on products.id = order_details.product_id
+    group by product_id
+    order by total_quantity
+    limit 1;
+
+/*
+6. Who are the worst performing employees based on units sold per region?
+*/
+
+/**** This shows all ****/
+
+select concat(employees.first_name,' ', employees.last_name) as emp,
+	orders.ship_country_region, sum(order_details.quantity) as sale_volume, 
+    sum(order_details.quantity*unit_price) as total_sales
+    from orders
+    inner join employees
+    on orders.employee_id = employees.id
+    inner join order_details
+    on order_details.order_id = orders.id
+    group by emp, orders.ship_country_region
+    with rollup;
+
+/**** This answers the question****/
+
+select concat(employees.first_name,' ', employees.last_name) as emp,
+	orders.ship_country_region, sum(order_details.quantity) as sale_volume, 
+    sum(order_details.quantity*unit_price) as total_sales
+    from orders
+    inner join employees
+    on orders.employee_id = employees.id
+    inner join order_details
+    on order_details.order_id = orders.id
+    group by emp, orders.ship_country_region
+    order by sale_volume
+    limit 1;
+
+/*
+7. What’s our turnaround time for shipping?
+*/
+
+/**** unfortunately all payment dates and expected dates are null ****/
+select payment_date
+	from purchase_orders;
+
+select payment_date, date_received 
+	from purchase_orders
+	right join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id;
+
+/**** using approved_date as alternative ****/
+
+select approved_date, date_received, datediff(date_received,approved_date) as shipping_days,
+	product_name, suppliers.company
+	from purchase_orders
+	right join purchase_order_details
+    on purchase_orders.id = purchase_order_details.purchase_order_id
+    inner join products
+    on products.id = purchase_order_details.product_id
+    inner join suppliers
+    on purchase_orders.supplier_id = suppliers.id
+    where (approved_date is not null) and (date_received is not null)
+    order by shipping_days desc;
+
+
+/*
+8. How does unit cost in the PO detail table differ from standard cost
+
+Duplicate - ignore.
 */
 
 /*
+9. What potential surplus/deficit may occur due to transaction waste or failed allocation of resources could result in profit/loss?
+*/
+
+/*
+<<<<<<< HEAD
 
 What is the variance between standard cost and actual cost?
 What is the worst selling product based on the number of units sold?
@@ -238,6 +371,27 @@ How many customer orders are on hold and what proportions?
 
 /*
 ****What category of product has the highest margin?*****
+=======
+10. How many pruchase orders are on hold and what proportions?
+*/
+
+select * from inventory_transactions
+	inner join inventory_transaction_types
+    on transaction_type = inventory_transaction_types.id;
+
+select type_name, (purchase_order_id is not null),
+	(customer_order_id is not null)
+	from inventory_transactions
+	inner join inventory_transaction_types
+    on inventory_transactions.transaction_type = inventory_transaction_types.id;
+    
+/*
+11. How many customer orders are on hold and what proportions?
+*/
+
+/*
+12. What product has the highest margin?
+>>>>>>> e2029a42d245944d0d5fcc9384f8fd88a46432f3
 */
 
 select *,margin/total_cost 
@@ -252,4 +406,21 @@ select *,margin/total_cost
     on products.id = order_details.product_id
     group by product_id) as tmp 
     order by perc_margin desc;
+<<<<<<< HEAD
     
+=======
+
+/*
+13. What is typical invoice payment lag time, and how do customers compare on average?
+*/
+
+select company,avg(datediff(paid_date,invoice_date)) as avg_days_receipt_of_payment
+	from orders, invoices, customers
+    where orders.id = invoices.order_id and
+    customers.id = orders.customer_id
+    group by company
+    order by avg_days_receipt_of_payment;
+
+
+
+>>>>>>> e2029a42d245944d0d5fcc9384f8fd88a46432f3

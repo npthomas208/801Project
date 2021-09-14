@@ -27,7 +27,7 @@ getSqlConnection <- function(){
       password = 'sqDlsPOubh89zrgy',
       host = 'localhost',
       db = 'project',
-      port = 3307
+      port = 3306
     ) # TODO: use a configuration group `group = "my-db")`
   return(con)
 }
@@ -55,7 +55,11 @@ df<- merge(states_map, po_loc, by = c("region"), all=TRUE)
 
 df <- left_join(states_map,df,by = c("region"))
 
+<<<<<<< HEAD
 map <- ggplot(df, aes(long.x, lat.x, group = group.x))+
+=======
+map <- ggplot(df, aes(long.x, lat.x, group = group.x, labels=region))+
+>>>>>>> e2029a42d245944d0d5fcc9384f8fd88a46432f3
   geom_polygon(aes(fill = po_counts), color = "white")+
   scale_fill_viridis_c(option = "C")
 
@@ -124,4 +128,18 @@ perc_margin <- ggplot(cost_rev_table$by_product, aes(x=reorder(product_name,-per
 perc_margin
 ggplotly(rev)
 ggplotly(perc_margin)
+```
+
+
+```{r}
+sc <- dbGetQuery(conn, 'select unit_cost, standard_cost, (unit_cost-standard_cost) as diff
+	from purchase_order_details
+    inner join products
+    on products.id = purchase_order_details.product_id;')
+
+
+sc
+```
+```{r}
+save.image()
 ```
