@@ -203,8 +203,7 @@ GROUP DEVELOPED QUESTIONS...
 */ 
 
 /*
-Which state/province consists of the largest number of purchase orders within 2019?
-orders from cusomers, using the shipped to address:
+Which state/province consists of the largest number of customer orders within 2019?
 */
 
 select orders.ship_state_province,
@@ -225,6 +224,19 @@ What category of products has the highest standard cost?
 */
 
 /*
+
+What is the variance between standard cost and actual cost?
+What is the worst selling product based on the number of units sold?
+Who are the worst performing employees based on units sold per region?
+What’s our turnaround time for shipping?
+Payment date and received 
+How does unit cost in the PO detail table differentiate from the standard cost?
+What potential surplus/deficit may occur due to failed allocation of resources could result in profit/loss?
+How many purchase orders are on hold and what proportions?
+How many customer orders are on hold and what proportions?
+*/
+
+/*
 ****What category of product has the highest margin?*****
 */
 
@@ -241,13 +253,3 @@ select *,margin/total_cost
     group by product_id) as tmp 
     order by perc_margin desc;
     
-
-/*
-What is the variance between standard cost and actual cost?
-What is the worst selling product based on the number of units sold?
-Who are the worst performing employees based on units sold per region?
-What’s our turnaround time for shipping?
-What proportion of transactions are waste? What products are wasted most?
-How does unit cost in the PO detail table differentiate from the standard cost?
-**What potential surplus/deficit may occur due to transaction waste or failed allocation of resources could result in profit/loss?
-*/

@@ -47,7 +47,7 @@ po_loc <- dbGetQuery(conn, "select orders.ship_state_province,
 po_loc
 ```
 
-
+# 1
 ```{r}
 states_map <- map_data("state")
 po_loc$region <- tolower(state.name[match(po_loc$ship_state_province,state.abb)])
@@ -55,12 +55,48 @@ df<- merge(states_map, po_loc, by = c("region"), all=TRUE)
 
 df <- left_join(states_map,df,by = c("region"))
 
-map <- ggplot(df, aes(long.x, lat.x, group = region))+
+map <- ggplot(df, aes(long.x, lat.x, group = group.x))+
   geom_polygon(aes(fill = po_counts), color = "white")+
   scale_fill_viridis_c(option = "C")
 
 ggplotly(map)
 ```
+#2
+```{r}
+POs_for_restocking <- dbGetQuery(conn, "SELECT COUNT(based_on_CO) total_PO, SUM(based_on_CO) AS total_based_on_customer_orders, SUM(based_on_CO)/COUNT(based_on_CO) AS perc_based_on_customer_orders FROM
+(SELECT *, (purchase_orders.notes IS NOT NULL) AS based_on_CO 
+FROM  `purchase_orders`) as tmp1;
+")
+POs_for_restocking
+po = POs_for_restocking$total_based_on_customer_orders
+cd
+```
+
+```{r}
+ggplot(POs_for_restocking, aes=(y=perc_based_on_customer_orders,x=''))
+
+ggplotly(rev)
+ggplotly(perc_margin)
+```
+#3
+```{r}
+categories_stcost <- dbGetQuery(conn, "
+select category, avg(standard_cost) as avg_standard_cost
+	from products 
+	group by category
+    order by avg_standard_cost desc;
+")
+categories_stcost
+```
+```{r}
+p0 <- ggplot(categories_stcost, aes(x=category,y=avg_standard_cost))+
+  geom_bar(position="stack", stat="identity")+
+  geom_text(aes(y=5,label=round(avg_standard_cost)))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ggplotly(p0)
+```
+
+
 ```{r}
 cost_rev_table <- list()
 cost_rev_table$by_product <- dbGetQuery(conn, "select *,margin/total_cost 
@@ -83,8 +119,9 @@ rev <- ggplot(cost_rev_table$by_product, aes(x=product_name,y=total_rev))+
 
 perc_margin <- ggplot(cost_rev_table$by_product, aes(x=reorder(product_name,-perc_margin),y=perc_margin))+
   geom_bar(position="stack", stat="identity")+
+  geom_text(aes(y=0.5,label=round(perc_margin,2), angle=90, lineheight=0.1))+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
+perc_margin
 ggplotly(rev)
 ggplotly(perc_margin)
 ```
